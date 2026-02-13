@@ -93,6 +93,7 @@ describe('ReadManyFilesTool', () => {
         getReadManyFilesExcludes: () => DEFAULT_FILE_EXCLUDES,
       }),
       isInteractive: () => false,
+      getExperimentalHashline: () => false,
       storage: {
         getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
       },
@@ -530,6 +531,7 @@ describe('ReadManyFilesTool', () => {
           getReadManyFilesExcludes: () => [],
         }),
         isInteractive: () => false,
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },

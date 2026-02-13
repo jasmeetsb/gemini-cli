@@ -28,6 +28,8 @@ import { canUseRipgrep, RipGrepTool } from '../tools/ripGrep.js';
 import { GlobTool } from '../tools/glob.js';
 import { ActivateSkillTool } from '../tools/activate-skill.js';
 import { EditTool } from '../tools/edit.js';
+import { HashlineEditTool, ReplaceCompatShimTool } from '../tools/hashline-edit.js';
+import { getToolAliases, HASHLINE_EDIT_TOOL_NAME } from '../tools/tool-names.js';
 import { ShellTool } from '../tools/shell.js';
 import { WriteFileTool } from '../tools/write-file.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
@@ -443,6 +445,7 @@ export interface ConfigParameters {
   trustedFolder?: boolean;
   useBackgroundColor?: boolean;
   useRipgrep?: boolean;
+  experimentalHashlineEditing?: boolean;
   enableInteractiveShell?: boolean;
   skipNextSpeakerCheck?: boolean;
   shellExecutionConfig?: ShellExecutionConfig;
@@ -611,6 +614,7 @@ export class Config {
   private readonly ptyInfo: string;
   private readonly trustedFolder: boolean | undefined;
   private readonly useRipgrep: boolean;
+  private readonly experimentalHashlineEditing: boolean;
   private readonly enableInteractiveShell: boolean;
   private readonly skipNextSpeakerCheck: boolean;
   private readonly useBackgroundColor: boolean;
@@ -795,6 +799,9 @@ export class Config {
     this.ptyInfo = params.ptyInfo ?? 'child_process';
     this.trustedFolder = params.trustedFolder;
     this.useRipgrep = params.useRipgrep ?? true;
+    this.experimentalHashlineEditing =
+      process.env['GEMINI_EXPERIMENTAL_HASHLINE'] === 'true' ||
+      (params.experimentalHashlineEditing ?? false);
     this.useBackgroundColor = params.useBackgroundColor ?? true;
     this.enableInteractiveShell = params.enableInteractiveShell ?? false;
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? true;
@@ -2246,6 +2253,10 @@ export class Config {
     return this.useRipgrep;
   }
 
+  getExperimentalHashline(): boolean {
+    return this.experimentalHashlineEditing;
+  }
+
   getUseBackgroundColor(): boolean {
     return this.useBackgroundColor;
   }
@@ -2417,9 +2428,21 @@ export class Config {
     maybeRegister(ActivateSkillTool, () =>
       registry.registerTool(new ActivateSkillTool(this, this.messageBus)),
     );
-    maybeRegister(EditTool, () =>
-      registry.registerTool(new EditTool(this, this.messageBus)),
-    );
+    if (this.getExperimentalHashline()) {
+      const coreTools = this.getCoreTools();
+      const hashlineAliases = getToolAliases(HASHLINE_EDIT_TOOL_NAME);
+      const isEnabled = !coreTools || coreTools.some(
+        (tool) => hashlineAliases.includes(tool),
+      );
+      if (isEnabled) {
+        registry.registerTool(new HashlineEditTool(this, this.messageBus));
+        registry.registerTool(new ReplaceCompatShimTool(this, this.messageBus));
+      }
+    } else {
+      maybeRegister(EditTool, () =>
+        registry.registerTool(new EditTool(this, this.messageBus)),
+      );
+    }
     maybeRegister(WriteFileTool, () =>
       registry.registerTool(new WriteFileTool(this, this.messageBus)),
     );

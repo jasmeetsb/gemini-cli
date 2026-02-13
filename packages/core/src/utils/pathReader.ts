@@ -87,6 +87,9 @@ export async function readPathFromWorkspace(
         filePath,
         config.getTargetDir(),
         config.getFileSystemService(),
+        undefined,
+        undefined,
+        config.getExperimentalHashline(),
       );
       allParts.push(result.llmContent);
       allParts.push({ text: '\n' }); // Add a newline for separation
@@ -112,6 +115,9 @@ export async function readPathFromWorkspace(
       absolutePath,
       config.getTargetDir(),
       config.getFileSystemService(),
+      undefined,
+      undefined,
+      config.getExperimentalHashline(),
     );
     return [result.llmContent];
   }

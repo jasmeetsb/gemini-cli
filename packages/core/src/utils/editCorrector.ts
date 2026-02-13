@@ -10,6 +10,7 @@ import type { BaseLlmClient } from '../core/baseLlmClient.js';
 import type { EditToolParams } from '../tools/edit.js';
 import {
   EDIT_TOOL_NAME,
+  HASHLINE_EDIT_TOOL_NAME,
   GREP_TOOL_NAME,
   READ_FILE_TOOL_NAME,
   READ_MANY_FILES_TOOL_NAME,
@@ -97,6 +98,7 @@ async function findLastEditTimestamp(
   const toolsInResp = new Set([
     WRITE_FILE_TOOL_NAME,
     EDIT_TOOL_NAME,
+    HASHLINE_EDIT_TOOL_NAME,
     READ_MANY_FILES_TOOL_NAME,
     GREP_TOOL_NAME,
   ]);

@@ -30,6 +30,7 @@ import {
 import { GeminiClient } from '../core/client.js';
 import { GitService } from '../services/gitService.js';
 import { ShellTool } from '../tools/shell.js';
+import { HashlineEditTool, ReplaceCompatShimTool } from '../tools/hashline-edit.js';
 import { ReadFileTool } from '../tools/read-file.js';
 import { GrepTool } from '../tools/grep.js';
 import { RipGrepTool, canUseRipgrep } from '../tools/ripGrep.js';
@@ -88,6 +89,7 @@ vi.mock('../tools/ripGrep.js', () => ({
 }));
 vi.mock('../tools/glob');
 vi.mock('../tools/edit');
+vi.mock('../tools/hashline-edit');
 vi.mock('../tools/shell');
 vi.mock('../tools/write-file');
 vi.mock('../tools/web-fetch');
@@ -1095,6 +1097,88 @@ describe('Server Config (config.ts)', () => {
       await config.initialize();
 
       expect(SubAgentToolMock).not.toHaveBeenCalled();
+    });
+
+    describe('hashline tool registration', () => {
+      let originalEnv: NodeJS.ProcessEnv;
+      beforeEach(() => {
+        originalEnv = { ...process.env };
+      });
+      afterEach(() => {
+        process.env = originalEnv;
+      });
+
+      it('registers hashline_edit instead of edit when flag is on', async () => {
+        process.env['GEMINI_EXPERIMENTAL_HASHLINE'] = 'true';
+        const config = new Config(baseParams);
+        await config.initialize();
+
+        const registerToolMock = (
+          (await vi.importMock('../tools/tool-registry')) as {
+            ToolRegistry: { prototype: { registerTool: Mock } };
+          }
+        ).ToolRegistry.prototype.registerTool;
+
+        const wasHashlineRegistered = registerToolMock.mock.calls.some(
+          (call) => call[0] instanceof vi.mocked(HashlineEditTool),
+        );
+        expect(wasHashlineRegistered).toBe(true);
+      });
+
+      it('registers replace compat shim when hashline flag is on', async () => {
+        process.env['GEMINI_EXPERIMENTAL_HASHLINE'] = 'true';
+        const config = new Config(baseParams);
+        await config.initialize();
+
+        const registerToolMock = (
+          (await vi.importMock('../tools/tool-registry')) as {
+            ToolRegistry: { prototype: { registerTool: Mock } };
+          }
+        ).ToolRegistry.prototype.registerTool;
+
+        const wasShimRegistered = registerToolMock.mock.calls.some(
+          (call) => call[0] instanceof vi.mocked(ReplaceCompatShimTool),
+        );
+        expect(wasShimRegistered).toBe(true);
+      });
+
+      it('does not register hashline_edit when flag is off', async () => {
+        delete process.env['GEMINI_EXPERIMENTAL_HASHLINE'];
+        const config = new Config(baseParams);
+        await config.initialize();
+
+        const registerToolMock = (
+          (await vi.importMock('../tools/tool-registry')) as {
+            ToolRegistry: { prototype: { registerTool: Mock } };
+          }
+        ).ToolRegistry.prototype.registerTool;
+
+        const wasHashlineRegistered = registerToolMock.mock.calls.some(
+          (call) => call[0] instanceof vi.mocked(HashlineEditTool),
+        );
+        expect(wasHashlineRegistered).toBe(false);
+      });
+
+      it('registers hashline_edit when flag is on AND user allowlisted replace', async () => {
+        process.env['GEMINI_EXPERIMENTAL_HASHLINE'] = 'true';
+        const params: ConfigParameters = {
+          ...baseParams,
+          coreTools: ['replace'],
+        };
+        const config = new Config(params);
+        await config.initialize();
+
+        const registerToolMock = (
+          (await vi.importMock('../tools/tool-registry')) as {
+            ToolRegistry: { prototype: { registerTool: Mock } };
+          }
+        ).ToolRegistry.prototype.registerTool;
+
+        const wasHashlineRegistered = registerToolMock.mock.calls.some(
+          (call) => call[0] instanceof vi.mocked(HashlineEditTool),
+        );
+        expect(wasHashlineRegistered).toBe(true);
+      });
     });
 
     describe('with minified tool class names', () => {

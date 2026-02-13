@@ -297,6 +297,9 @@ ${finalExclusionPatternsForDescription
             filePath,
             this.config.getTargetDir(),
             this.config.getFileSystemService(),
+            undefined,
+            undefined,
+            this.config.getExperimentalHashline(),
           );
 
           if (fileReadResult.error) {

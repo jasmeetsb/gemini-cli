@@ -49,7 +49,7 @@ modes = ["plan"]
 
 # Allow write_file and replace for .md files in plans directory
 [[rule]]
-toolName = ["write_file", "replace"]
+toolName = ["write_file", "replace", "hashline_edit"]
 decision = "allow"
 priority = 70
 modes = ["plan"]

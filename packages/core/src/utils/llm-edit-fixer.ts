@@ -10,6 +10,7 @@ import { type BaseLlmClient } from '../core/baseLlmClient.js';
 import { LRUCache } from 'mnemonist';
 import { getPromptIdWithFallback } from './promptIdContext.js';
 import { debugLogger } from './debugLogger.js';
+import { parseLineRef } from '../tools/hashline-utils.js';
 
 const MAX_CACHE_SIZE = 50;
 const GENERATE_JSON_TIMEOUT_MS = 40000; // 40 seconds
@@ -191,6 +192,172 @@ export async function FixLLMEditWithInstruction(
   return result;
 }
 
+const HASHLINE_EDIT_SYS_PROMPT = `
+You are an expert code-editing assistant specializing in correcting failed hashline edit operations.
+
+# Primary Goal
+A hashline edit failed because one or more line anchors (LINE:HASH) do not match the current file state. Your task is to provide corrected operations with updated anchors that match the current file.
+
+# Input Context
+You will be given:
+1. The high-level instruction for the original edit.
+2. The operations that failed (with stale anchors).
+3. The mismatch diagnostic showing which anchors are stale.
+4. The current file content with hashline tags ({line}:{hash}|{content} per line).
+
+# Rules for Correction
+1. **Map Stale Anchors:** Find each stale anchor in the current file by matching the intended line content, then use the current LINE:HASH.
+2. **Preserve Intent:** Keep the edit operations unchanged except for updating anchors. Do not change new_text, text, old_text, or operation types.
+3. **Ascending Order:** Operations must target lines in ascending order. If updating anchors causes operations to be out of order (because lines moved), you MUST reorder the operations so they target lines in ascending order.
+4. **No Changes Case:** If the intended change is already present in the file, set noChangesRequired to true and explain why.
+5. **Exactness:** Anchors must exactly match the current file's LINE:HASH tags.
+`;
+
+const HASHLINE_EDIT_USER_PROMPT = `
+# Goal of the Original Edit
+<instruction>
+{instruction}
+</instruction>
+
+# Failed Operations (with stale anchors)
+<operations>
+{operations}
+</operations>
+
+# Mismatch Diagnostic
+<diagnostic>
+{diagnostic}
+</diagnostic>
+
+# Current File Content (with hashline tags)
+<file_content>
+{current_content}
+</file_content>
+
+# Your Task
+Provide corrected operations with updated anchors that match the current file state. Keep edits minimal — only fix the anchors.
+`;
+
+export interface HashlineEditCorrection {
+  operations: Array<{
+    op: string;
+    anchor?: string;
+    start_anchor?: string;
+    end_anchor?: string;
+    new_text?: string;
+    text?: string;
+    old_text?: string;
+    all?: boolean;
+  }>;
+  noChangesRequired: boolean;
+  explanation: string;
+}
+
+const HashlineEditCorrectionSchema = {
+  type: Type.OBJECT,
+  properties: {
+    explanation: { type: Type.STRING },
+    operations: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          op: { type: Type.STRING },
+          anchor: { type: Type.STRING },
+          start_anchor: { type: Type.STRING },
+          end_anchor: { type: Type.STRING },
+          new_text: { type: Type.STRING },
+          text: { type: Type.STRING },
+          old_text: { type: Type.STRING },
+          all: { type: Type.BOOLEAN },
+        },
+        required: ['op'],
+      },
+    },
+    noChangesRequired: { type: Type.BOOLEAN },
+  },
+  required: ['operations', 'explanation', 'noChangesRequired'],
+};
+
+const hashlineCorrectionCache = new LRUCache<
+  string,
+  HashlineEditCorrection
+>(MAX_CACHE_SIZE);
+
+export async function FixLLMHashlineEdit(
+  instruction: string,
+  operations: unknown[],
+  mismatchDiagnostic: string,
+  currentContentWithHashes: string,
+  baseLlmClient: BaseLlmClient,
+  abortSignal: AbortSignal,
+): Promise<HashlineEditCorrection | null> {
+  const promptId = getPromptIdWithFallback('hashline-fixer');
+
+  const cacheKey = createHash('sha256')
+    .update(
+      JSON.stringify([
+        currentContentWithHashes,
+        operations,
+        instruction,
+        mismatchDiagnostic,
+      ]),
+    )
+    .digest('hex');
+  const cachedResult = hashlineCorrectionCache.get(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  // Enrich operations with anchor_content context
+  const enrichedOps = (operations as Record<string, unknown>[]).map((op) => {
+    const anchors = ['anchor', 'start_anchor', 'end_anchor'] as const;
+    const enriched = { ...op };
+    for (const key of anchors) {
+      if (enriched[key] && typeof enriched[key] === 'string') {
+        const ref = parseLineRef(enriched[key] as string);
+        if (ref) {
+          enriched[`${key}_content`] = `(line ${ref.line} had hash ${ref.hash})`;
+        }
+      }
+    }
+    return enriched;
+  });
+
+  const userPrompt = HASHLINE_EDIT_USER_PROMPT
+    .replace('{instruction}', instruction)
+    .replace('{operations}', JSON.stringify(enrichedOps, null, 2))
+    .replace('{diagnostic}', mismatchDiagnostic)
+    .replace('{current_content}', currentContentWithHashes);
+
+  const contents: Content[] = [
+    {
+      role: 'user',
+      parts: [{ text: userPrompt }],
+    },
+  ];
+
+  const result = await generateJsonWithTimeout<HashlineEditCorrection>(
+    baseLlmClient,
+    {
+      modelConfigKey: { model: 'llm-edit-fixer' },
+      contents,
+      schema: HashlineEditCorrectionSchema,
+      abortSignal,
+      systemInstruction: HASHLINE_EDIT_SYS_PROMPT,
+      promptId,
+      maxAttempts: 1,
+    },
+    GENERATE_JSON_TIMEOUT_MS,
+  );
+
+  if (result) {
+    hashlineCorrectionCache.set(cacheKey, result);
+  }
+  return result;
+}
+
 export function resetLlmEditFixerCaches_TEST_ONLY() {
   editCorrectionWithInstructionCache.clear();
+  hashlineCorrectionCache.clear();
 }

@@ -43,6 +43,11 @@ export enum ToolErrorType {
   EDIT_NO_CHANGE = 'edit_no_change',
   EDIT_NO_CHANGE_LLM_JUDGEMENT = 'edit_no_change_llm_judgement',
 
+  // Hashline-specific Errors
+  HASHLINE_MISMATCH = 'hashline_mismatch',
+  HASHLINE_INVALID_ANCHOR = 'hashline_invalid_anchor',
+  HASHLINE_ANCHOR_OUT_OF_RANGE = 'hashline_anchor_out_of_range',
+
   // Glob-specific Errors
   GLOB_EXECUTION_ERROR = 'glob_execution_error',
 

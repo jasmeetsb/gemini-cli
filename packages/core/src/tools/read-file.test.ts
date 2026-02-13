@@ -48,6 +48,7 @@ describe('ReadFileTool', () => {
         getProjectTempDir: () => path.join(tempRootDir, '.temp'),
       },
       isInteractive: () => false,
+      getExperimentalHashline: () => false,
       isPathAllowed(this: Config, absolutePath: string): boolean {
         const workspaceContext = this.getWorkspaceContext();
         if (workspaceContext.isPathWithinWorkspace(absolutePath)) {
@@ -451,6 +452,7 @@ describe('ReadFileTool', () => {
             respectGitIgnore: true,
             respectGeminiIgnore: true,
           }),
+          getExperimentalHashline: () => false,
           storage: {
             getProjectTempDir: () => path.join(tempRootDir, '.temp'),
           },
@@ -528,6 +530,7 @@ describe('ReadFileTool', () => {
             getProjectTempDir: () => path.join(tempRootDir, '.temp'),
           },
           isInteractive: () => false,
+          getExperimentalHashline: () => false,
           isPathAllowed(this: Config, absolutePath: string): boolean {
             const workspaceContext = this.getWorkspaceContext();
             if (workspaceContext.isPathWithinWorkspace(absolutePath)) {

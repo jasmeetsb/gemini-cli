@@ -26,12 +26,12 @@
 #   999: YOLO mode allow-all (becomes 1.999 in default tier)
 
 [[rule]]
-toolName = "replace"
+toolName = ["replace", "hashline_edit"]
 decision = "ask_user"
 priority = 10
 
 [[rule]]
-toolName = "replace"
+toolName = ["replace", "hashline_edit"]
 decision = "allow"
 priority = 15
 modes = ["autoEdit"]

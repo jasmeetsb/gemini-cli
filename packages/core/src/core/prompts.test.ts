@@ -114,6 +114,7 @@ describe('Core System Prompt (prompts.ts)', () => {
       }),
       getApprovalMode: vi.fn().mockReturnValue(ApprovalMode.DEFAULT),
       getApprovedPlanPath: vi.fn().mockReturnValue(undefined),
+      getExperimentalHashline: vi.fn().mockReturnValue(false),
     } as unknown as Config;
   });
 
@@ -387,6 +388,7 @@ describe('Core System Prompt (prompts.ts)', () => {
           getSkills: vi.fn().mockReturnValue([]),
         }),
         getApprovedPlanPath: vi.fn().mockReturnValue(undefined),
+        getExperimentalHashline: vi.fn().mockReturnValue(false),
       } as unknown as Config;
 
       const prompt = getCoreSystemPrompt(testConfig);

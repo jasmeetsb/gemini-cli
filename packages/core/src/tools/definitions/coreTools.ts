@@ -15,6 +15,7 @@ export const READ_FILE_TOOL_NAME = 'read_file';
 export const SHELL_TOOL_NAME = 'run_shell_command';
 export const WRITE_FILE_TOOL_NAME = 'write_file';
 export const EDIT_TOOL_NAME = 'replace';
+export const HASHLINE_EDIT_TOOL_NAME = 'hashline_edit';
 export const WEB_SEARCH_TOOL_NAME = 'google_web_search';
 
 // ============================================================================
@@ -301,6 +302,100 @@ A good instruction should concisely answer:
     },
   },
 };
+
+// ============================================================================
+// HASHLINE_EDIT TOOL
+// ============================================================================
+
+export const HASHLINE_EDIT_DEFINITION: ToolDefinition = {
+  base: {
+    name: HASHLINE_EDIT_TOOL_NAME,
+    description: `Edits a file using hashline anchors. Each line in files read by ${READ_FILE_TOOL_NAME} is tagged with a format \`{line}:{hash}|\` prefix. Use these anchors to precisely identify lines to edit without reproducing exact text.
+
+Operations (provide as an array):
+- **set_line**: Replace a single line. Params: \`{ op: "set_line", anchor: "LINE:HASH", new_text: "replacement text" }\`
+- **replace_lines**: Replace a range of lines (inclusive). Params: \`{ op: "replace_lines", start_anchor: "LINE:HASH", end_anchor: "LINE:HASH", new_text: "replacement" }\`. Omit \`end_anchor\` to replace just the start line. Omit \`new_text\` to delete the range.
+- **insert_after**: Insert text after an anchor line. Params: \`{ op: "insert_after", anchor: "LINE:HASH", text: "new text to insert" }\`
+- **replace**: Fallback exact string replacement (no anchors needed). Params: \`{ op: "replace", old_text: "exact old", new_text: "exact new", all: true }\`. Set \`all: true\` to replace all occurrences; default replaces only the first.
+
+Anchor format is \`LINE:HASH\` as shown when you read the file (e.g., \`42:a3f\`). If the file has changed since you read it, anchors may not match and you will receive updated references to retry with.
+
+**Important:**
+- Operations must target lines in ascending order (earliest line first). For example, if editing lines 10, 25, and 40, list the operations in that order.
+- Do NOT mix anchor-based operations (set_line, replace_lines, insert_after) with fallback replace in a single call. Use separate calls for each type.
+
+The user has the ability to modify edit content. If modified, this will be stated in the response.`,
+    parametersJsonSchema: {
+      type: 'object',
+      properties: {
+        file_path: {
+          description:
+            'Path to the file to modify (absolute or relative to project root).',
+          type: 'string',
+        },
+        instruction: {
+          description: `A clear, semantic instruction for the code change. Explain WHY, WHERE, WHAT, and the desired OUTCOME.`,
+          type: 'string',
+        },
+        operations: {
+          description:
+            'Array of edit operations to apply sequentially. Maximum 50 operations per call.',
+          type: 'array',
+          maxItems: 50,
+          items: {
+            type: 'object',
+            properties: {
+              op: {
+                type: 'string',
+                enum: ['set_line', 'replace_lines', 'insert_after', 'replace'],
+                description: 'The operation type.',
+              },
+              anchor: {
+                type: 'string',
+                description:
+                  'Line anchor (LINE:HASH) for set_line and insert_after.',
+              },
+              start_anchor: {
+                type: 'string',
+                description: 'Start line anchor for replace_lines.',
+              },
+              end_anchor: {
+                type: 'string',
+                description:
+                  'End line anchor for replace_lines (inclusive). Omit to target only start line.',
+              },
+              new_text: {
+                type: 'string',
+                description:
+                  'Replacement text for set_line and replace_lines.',
+              },
+              text: {
+                type: 'string',
+                description: 'Text to insert for insert_after.',
+              },
+              old_text: {
+                type: 'string',
+                description: 'Exact text to find for replace operation.',
+              },
+              all: {
+                type: 'boolean',
+                description:
+                  'If true, replace all occurrences. Default: false (first only).',
+              },
+            },
+            required: ['op'],
+          },
+        },
+      },
+      required: ['file_path', 'instruction', 'operations'],
+    },
+  },
+};
+
+// NOTE: The operation items schema uses a flat `required: ['op']` rather than
+// discriminated `oneOf` per operation type. This is intentional — simpler schemas
+// produce fewer model-side tool-calling failures. Per-op required fields (e.g.,
+// `anchor` for `set_line`) are validated at runtime with clear error messages.
 
 // ============================================================================
 // GLOB TOOL

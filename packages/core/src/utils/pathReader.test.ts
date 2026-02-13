@@ -36,6 +36,7 @@ const createMockConfig = (
     getFileService: () => mockFileService,
     getFileFilteringRespectGitIgnore: () => respectGitIgnore,
     getFileFilteringRespectGeminiIgnore: () => respectGeminiIgnore,
+    getExperimentalHashline: () => false,
   } as unknown as Config;
 };
 

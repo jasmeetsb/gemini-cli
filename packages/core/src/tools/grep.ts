@@ -24,6 +24,7 @@ import type { Config } from '../config/config.js';
 import type { FileExclusions } from '../utils/ignorePatterns.js';
 import { ToolErrorType } from './tool-error.js';
 import { GREP_TOOL_NAME } from './tool-names.js';
+import { computeLineHash } from './hashline-utils.js';
 import { debugLogger } from '../utils/debugLogger.js';
 import { GREP_DEFINITION } from './definitions/coreTools.js';
 import { resolveToolDeclaration } from './definitions/resolver.js';
@@ -309,12 +310,20 @@ class GrepToolInvocation extends BaseToolInvocation<
 
       llmContent += `:\n---\n`;
 
+      const hashlineEnabled = this.config.getExperimentalHashline();
       for (const filePath in matchesByFile) {
         llmContent += `File: ${filePath}
 `;
         matchesByFile[filePath].forEach((match) => {
-          const trimmedLine = match.line.trim();
-          llmContent += `L${match.lineNumber}: ${trimmedLine}\n`;
+          if (hashlineEnabled) {
+            // Hash from RAW match.line BEFORE .trim() for hash parity with read_file
+            const hash = computeLineHash(match.line);
+            const trimmedLine = match.line.trim();
+            llmContent += `L${match.lineNumber}:${hash}: ${trimmedLine}\n`;
+          } else {
+            const trimmedLine = match.line.trim();
+            llmContent += `L${match.lineNumber}: ${trimmedLine}\n`;
+          }
         });
         llmContent += '---\n';
       }

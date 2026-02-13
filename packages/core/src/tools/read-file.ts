@@ -99,6 +99,7 @@ class ReadFileToolInvocation extends BaseToolInvocation<
       this.config.getFileSystemService(),
       this.params.offset,
       this.params.limit,
+      this.config.getExperimentalHashline(),
     );
 
     if (result.error) {

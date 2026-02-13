@@ -50,6 +50,7 @@ describe('GrepTool', () => {
 
     mockConfig = {
       getTargetDir: () => tempRootDir,
+      getExperimentalHashline: () => false,
       getWorkspaceContext: () => createMockWorkspaceContext(tempRootDir),
       getFileExclusions: () => ({
         getGlobExcludes: () => [],
@@ -330,6 +331,7 @@ describe('GrepTool', () => {
       // Create a mock config with multiple directories
       const multiDirConfig = {
         getTargetDir: () => tempRootDir,
+        getExperimentalHashline: () => false,
         getWorkspaceContext: () =>
           createMockWorkspaceContext(tempRootDir, [secondDir]),
         getFileExclusions: () => ({
@@ -407,6 +409,7 @@ describe('GrepTool', () => {
       // Create a mock config with multiple directories
       const multiDirConfig = {
         getTargetDir: () => tempRootDir,
+        getExperimentalHashline: () => false,
         getWorkspaceContext: () =>
           createMockWorkspaceContext(tempRootDir, [secondDir]),
         getFileExclusions: () => ({
@@ -568,6 +571,7 @@ describe('GrepTool', () => {
       // Create a mock config with multiple directories
       const multiDirConfig = {
         getTargetDir: () => tempRootDir,
+        getExperimentalHashline: () => false,
         getWorkspaceContext: () =>
           createMockWorkspaceContext(tempRootDir, ['/another/dir']),
         getFileExclusions: () => ({

@@ -1104,6 +1104,62 @@ describe('fileUtils', () => {
         statSpy.mockRestore();
       }
     });
+
+    it('should format lines with hashline tags when hashlineEnabled is true', async () => {
+      const content = 'function hello() {\n  return "world";\n}';
+      actualNodeFs.writeFileSync(testTextFilePath, content);
+
+      const result = await processSingleFileContent(
+        testTextFilePath,
+        tempRootDir,
+        new StandardFileSystemService(),
+        undefined,
+        undefined,
+        true,
+      );
+
+      const lines = (result.llmContent as string).split('\n');
+      // Each line should have format: {linenum}:{hash}|{content}
+      expect(lines[0]).toMatch(/^1:[0-9a-f]{3}\|function hello\(\) \{$/);
+      expect(lines[1]).toMatch(/^2:[0-9a-f]{3}\|  return "world";$/);
+      expect(lines[2]).toMatch(/^3:[0-9a-f]{3}\|}$/);
+    });
+
+    it('should return plain text when hashlineEnabled is false', async () => {
+      const content = 'line one\nline two';
+      actualNodeFs.writeFileSync(testTextFilePath, content);
+
+      const result = await processSingleFileContent(
+        testTextFilePath,
+        tempRootDir,
+        new StandardFileSystemService(),
+        undefined,
+        undefined,
+        false,
+      );
+
+      expect(result.llmContent).toBe('line one\nline two');
+    });
+
+    it('should apply hashline tags with offset/limit', async () => {
+      const content = 'a\nb\nc\nd\ne';
+      actualNodeFs.writeFileSync(testTextFilePath, content);
+
+      const result = await processSingleFileContent(
+        testTextFilePath,
+        tempRootDir,
+        new StandardFileSystemService(),
+        1,
+        2,
+        true,
+      );
+
+      const lines = (result.llmContent as string).split('\n');
+      // offset=1 means start at 0-indexed line 1, which is "b" (displayed as line 2)
+      expect(lines[0]).toMatch(/^2:[0-9a-f]{3}\|b$/);
+      expect(lines[1]).toMatch(/^3:[0-9a-f]{3}\|c$/);
+      expect(lines).toHaveLength(2);
+    });
   });
 
   describe('saveTruncatedToolOutput & formatTruncatedToolOutput', () => {

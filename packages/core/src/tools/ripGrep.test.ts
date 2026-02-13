@@ -259,6 +259,7 @@ describe('RipGrepTool', () => {
       respectGitIgnore: true,
       respectGeminiIgnore: true,
     }),
+    getExperimentalHashline: () => false,
   } as unknown as Config;
 
   beforeEach(async () => {
@@ -284,6 +285,7 @@ describe('RipGrepTool', () => {
         respectGitIgnore: true,
         respectGeminiIgnore: true,
       }),
+      getExperimentalHashline: () => false,
       storage: {
         getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
       },
@@ -852,6 +854,7 @@ describe('RipGrepTool', () => {
           respectGitIgnore: true,
           respectGeminiIgnore: true,
         }),
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },
@@ -965,6 +968,7 @@ describe('RipGrepTool', () => {
           respectGitIgnore: true,
           respectGeminiIgnore: true,
         }),
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },
@@ -1495,6 +1499,7 @@ describe('RipGrepTool', () => {
           respectGitIgnore: false,
           respectGeminiIgnore: true,
         }),
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },
@@ -1561,6 +1566,7 @@ describe('RipGrepTool', () => {
           respectGitIgnore: true,
           respectGeminiIgnore: true,
         }),
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },
@@ -1627,6 +1633,7 @@ describe('RipGrepTool', () => {
           respectGitIgnore: true,
           respectGeminiIgnore: false,
         }),
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },
@@ -1801,6 +1808,7 @@ describe('RipGrepTool', () => {
           respectGitIgnore: true,
           respectGeminiIgnore: true,
         }),
+        getExperimentalHashline: () => false,
         storage: {
           getProjectTempDir: vi.fn().mockReturnValue('/tmp/project'),
         },

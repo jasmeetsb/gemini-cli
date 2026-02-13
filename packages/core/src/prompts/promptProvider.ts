@@ -28,6 +28,8 @@ import {
   ENTER_PLAN_MODE_TOOL_NAME,
   GLOB_TOOL_NAME,
   GREP_TOOL_NAME,
+  EDIT_TOOL_NAME,
+  HASHLINE_EDIT_TOOL_NAME,
 } from '../tools/tool-names.js';
 import { resolveModel, isPreviewModel } from '../config/models.js';
 import { DiscoveredMCPTool } from '../tools/mcp-tool.js';
@@ -166,6 +168,9 @@ export class PromptProvider {
             approvedPlan: approvedPlanPath
               ? { path: approvedPlanPath }
               : undefined,
+            activeEditToolName: config.getExperimentalHashline()
+              ? HASHLINE_EDIT_TOOL_NAME
+              : EDIT_TOOL_NAME,
           }),
           !isPlanMode,
         ),
@@ -175,6 +180,9 @@ export class PromptProvider {
             planModeToolsList,
             plansDir: config.storage.getProjectTempPlansDir(),
             approvedPlanPath: config.getApprovedPlanPath(),
+            activeEditToolName: config.getExperimentalHashline()
+              ? HASHLINE_EDIT_TOOL_NAME
+              : EDIT_TOOL_NAME,
           }),
           isPlanMode,
         ),

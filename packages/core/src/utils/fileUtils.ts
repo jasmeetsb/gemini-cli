@@ -12,6 +12,7 @@ import type { PartUnion } from '@google/genai';
 import mime from 'mime/lite';
 import type { FileSystemService } from '../services/fileSystemService.js';
 import { ToolErrorType } from '../tools/tool-error.js';
+import { computeLineHash } from '../tools/hashline-utils.js';
 import { BINARY_EXTENSIONS } from './ignorePatterns.js';
 import { createRequire as createModuleRequire } from 'node:module';
 import { debugLogger } from './debugLogger.js';
@@ -409,6 +410,7 @@ export async function processSingleFileContent(
   fileSystemService: FileSystemService,
   offset?: number,
   limit?: number,
+  hashlineEnabled?: boolean,
 ): Promise<ProcessedFileReadResult> {
   try {
     if (!fs.existsSync(filePath)) {
@@ -484,7 +486,22 @@ export async function processSingleFileContent(
         const selectedLines = lines.slice(actualStartLine, endLine);
 
         let linesWereTruncatedInLength = false;
-        const formattedLines = selectedLines.map((line) => {
+        const formattedLines = selectedLines.map((line, index) => {
+          if (hashlineEnabled) {
+            // Compute hash from ORIGINAL line content BEFORE truncation.
+            // This ensures the anchor hash matches when the model references it
+            // in hashline_edit, even if the displayed line was truncated.
+            const lineNumber = actualStartLine + index + 1; // 1-indexed
+            const hash = computeLineHash(line);
+            let displayLine = line;
+            if (displayLine.length > MAX_LINE_LENGTH_TEXT_FILE) {
+              linesWereTruncatedInLength = true;
+              displayLine =
+                displayLine.substring(0, MAX_LINE_LENGTH_TEXT_FILE) +
+                '... [truncated]';
+            }
+            return `${lineNumber}:${hash}|${displayLine}`;
+          }
           if (line.length > MAX_LINE_LENGTH_TEXT_FILE) {
             linesWereTruncatedInLength = true;
             return (

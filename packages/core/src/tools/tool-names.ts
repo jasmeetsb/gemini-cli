@@ -6,6 +6,7 @@
 
 import {
   EDIT_TOOL_NAME,
+  HASHLINE_EDIT_TOOL_NAME,
   GLOB_TOOL_NAME,
   GREP_TOOL_NAME,
   LS_TOOL_NAME,
@@ -21,6 +22,7 @@ import {
 
 export {
   EDIT_TOOL_NAME,
+  HASHLINE_EDIT_TOOL_NAME,
   GLOB_TOOL_NAME,
   GREP_TOOL_NAME,
   LS_TOOL_NAME,
@@ -38,7 +40,11 @@ export const LS_TOOL_NAME_LEGACY = 'list_directory'; // Just to be safe if anyth
 export const MEMORY_TOOL_NAME = 'save_memory';
 export const GET_INTERNAL_DOCS_TOOL_NAME = 'get_internal_docs';
 export const ACTIVATE_SKILL_TOOL_NAME = 'activate_skill';
-export const EDIT_TOOL_NAMES = new Set([EDIT_TOOL_NAME, WRITE_FILE_TOOL_NAME]);
+export const EDIT_TOOL_NAMES = new Set([
+  EDIT_TOOL_NAME,
+  WRITE_FILE_TOOL_NAME,
+  HASHLINE_EDIT_TOOL_NAME,
+]);
 export const ASK_USER_TOOL_NAME = 'ask_user';
 export const ASK_USER_DISPLAY_NAME = 'Ask User';
 export const EXIT_PLAN_MODE_TOOL_NAME = 'exit_plan_mode';
@@ -51,6 +57,9 @@ export const ENTER_PLAN_MODE_TOOL_NAME = 'enter_plan_mode';
 export const TOOL_LEGACY_ALIASES: Record<string, string> = {
   // Add future renames here, e.g.:
   search_file_content: GREP_TOOL_NAME,
+  // When hashline mode swaps replace → hashline_edit, policies
+  // referencing 'replace' should still match the active edit tool.
+  [EDIT_TOOL_NAME]: HASHLINE_EDIT_TOOL_NAME,
 };
 
 /**
@@ -88,6 +97,7 @@ export const ALL_BUILTIN_TOOL_NAMES = [
   WEB_SEARCH_TOOL_NAME,
   WEB_FETCH_TOOL_NAME,
   EDIT_TOOL_NAME,
+  HASHLINE_EDIT_TOOL_NAME,
   SHELL_TOOL_NAME,
   GREP_TOOL_NAME,
   READ_MANY_FILES_TOOL_NAME,

@@ -18,6 +18,7 @@ import type { Config } from '../config/config.js';
 import { fileExists } from '../utils/fileUtils.js';
 import { Storage } from '../config/storage.js';
 import { GREP_TOOL_NAME } from './tool-names.js';
+import { computeLineHash } from './hashline-utils.js';
 import { debugLogger } from '../utils/debugLogger.js';
 import {
   FileExclusions,
@@ -324,11 +325,17 @@ class GrepToolInvocation extends BaseToolInvocation<
 
       let llmContent = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}${wasTruncated ? ` (results limited to ${totalMaxMatches} matches for performance)` : ''}:\n---\n`;
 
+      const hashlineEnabled = this.config.getExperimentalHashline();
       for (const filePath in matchesByFile) {
         llmContent += `File: ${filePath}\n`;
         matchesByFile[filePath].forEach((match) => {
           const separator = match.isContext ? '-' : ':';
-          llmContent += `L${match.lineNumber}${separator} ${match.line}\n`;
+          if (hashlineEnabled) {
+            const hash = computeLineHash(match.line);
+            llmContent += `L${match.lineNumber}:${hash}${separator} ${match.line}\n`;
+          } else {
+            llmContent += `L${match.lineNumber}${separator} ${match.line}\n`;
+          }
         });
         llmContent += '---\n';
       }

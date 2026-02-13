@@ -53,6 +53,7 @@ describe('PromptProvider', () => {
       }),
       getApprovedPlanPath: vi.fn().mockReturnValue(undefined),
       getApprovalMode: vi.fn(),
+      getExperimentalHashline: vi.fn().mockReturnValue(false),
     } as unknown as Config;
   });
 
