@@ -144,6 +144,25 @@ describe('policyHelpers', () => {
       expect(chain[1]?.model).toBe('gemini-3-flash-preview');
     });
 
+    it('returns same fallback chain for Vertex AI auth as for API key auth (except custom-tools model)', () => {
+      const vertexConfig = createMockConfig({
+        getModel: () => DEFAULT_GEMINI_MODEL_AUTO,
+        getContentGeneratorConfig: () => ({ authType: AuthType.USE_VERTEX_AI }),
+      });
+      const apiKeyConfig = createMockConfig({
+        getModel: () => DEFAULT_GEMINI_MODEL_AUTO,
+        getContentGeneratorConfig: () => ({ authType: AuthType.USE_GEMINI }),
+      });
+
+      const vertexChain = resolvePolicyChain(vertexConfig);
+      const apiKeyChain = resolvePolicyChain(apiKeyConfig);
+
+      expect(vertexChain.map((p) => p.model)).toEqual(
+        apiKeyChain.map((p) => p.model),
+      );
+      expect(vertexChain).toHaveLength(2);
+    });
+
     it('returns Gemini 3.1 Pro Custom Tools chain when launched, auth is Gemini, and auto-gemini-3 requested', () => {
       const config = createMockConfig({
         getModel: () => 'auto-gemini-3',

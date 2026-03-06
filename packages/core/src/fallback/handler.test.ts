@@ -128,14 +128,40 @@ describe('handleFallback', () => {
       );
     });
 
-    it('should return null immediately if authType is not OAuth', async () => {
+    it('should proceed with fallback for API key auth', async () => {
+      vi.mocked(policyConfig.getModel).mockReturnValue(
+        DEFAULT_GEMINI_MODEL_AUTO,
+      );
+
       const result = await handleFallback(
         policyConfig,
         MOCK_PRO_MODEL,
         AUTH_API_KEY,
       );
-      expect(result).toBeNull();
-      expect(policyHandler).not.toHaveBeenCalled();
+      expect(result).toBe(true);
+      expect(policyHandler).toHaveBeenCalledWith(
+        MOCK_PRO_MODEL,
+        DEFAULT_GEMINI_FLASH_MODEL,
+        undefined,
+      );
+    });
+
+    it('should proceed with fallback for Vertex AI auth', async () => {
+      vi.mocked(policyConfig.getModel).mockReturnValue(
+        DEFAULT_GEMINI_MODEL_AUTO,
+      );
+
+      const result = await handleFallback(
+        policyConfig,
+        MOCK_PRO_MODEL,
+        AuthType.USE_VERTEX_AI,
+      );
+      expect(result).toBe(true);
+      expect(policyHandler).toHaveBeenCalledWith(
+        MOCK_PRO_MODEL,
+        DEFAULT_GEMINI_FLASH_MODEL,
+        undefined,
+      );
     });
 
     it('uses availability selection with correct candidates when enabled', async () => {

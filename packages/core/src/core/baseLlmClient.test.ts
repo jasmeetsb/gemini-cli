@@ -617,6 +617,40 @@ describe('BaseLlmClient', () => {
     });
   });
 
+  describe('Non-interactive fallback', () => {
+    it('should pass onPersistent429 callback even in non-interactive mode', async () => {
+      mockConfig.isInteractive.mockReturnValue(false);
+      mockGenerateContent.mockResolvedValue(
+        createMockResponse('{"color":"red"}'),
+      );
+
+      await client.generateJson(defaultOptions);
+
+      expect(retryWithBackoff).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({
+          onPersistent429: expect.any(Function),
+        }),
+      );
+    });
+
+    it('should pass onPersistent429 callback in interactive mode', async () => {
+      mockConfig.isInteractive.mockReturnValue(true);
+      mockGenerateContent.mockResolvedValue(
+        createMockResponse('{"color":"red"}'),
+      );
+
+      await client.generateJson(defaultOptions);
+
+      expect(retryWithBackoff).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({
+          onPersistent429: expect.any(Function),
+        }),
+      );
+    });
+  });
+
   describe('Availability Service Integration', () => {
     let mockAvailabilityService: ModelAvailabilityService;
     let contentOptions: GenerateContentOptions;
