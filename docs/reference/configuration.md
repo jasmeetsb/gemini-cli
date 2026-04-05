@@ -103,6 +103,17 @@ their corresponding top-level category object in your `settings.json` file.
   - **Default:** `[]`
   - **Requires restart:** Yes
 
+#### `ollama`
+
+- **`ollama.host`** (string):
+  - **Description:** The host URL for the Ollama server.
+  - **Default:** `"http://localhost:11434"`
+  - **Requires restart:** Yes
+
+- **`ollama.defaultModel`** (string):
+  - **Description:** The default model to use when not specified.
+  - **Default:** `undefined`
+
 #### `general`
 
 - **`general.preferredEditor`** (string):

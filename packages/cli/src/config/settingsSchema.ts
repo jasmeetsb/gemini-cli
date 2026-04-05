@@ -181,6 +181,36 @@ const SETTINGS_SCHEMA = {
     'Additional admin policy files or directories to load.',
   ),
 
+  ollama: {
+    type: 'object',
+    label: 'Ollama',
+    category: 'Advanced',
+    requiresRestart: true,
+    default: {},
+    description: 'Configuration for Ollama local models.',
+    showInDialog: false,
+    properties: {
+      host: {
+        type: 'string',
+        label: 'Ollama Host',
+        category: 'Advanced',
+        requiresRestart: true,
+        default: 'http://localhost:11434',
+        description: 'The host URL for the Ollama server.',
+        showInDialog: true,
+      },
+      defaultModel: {
+        type: 'string',
+        label: 'Default Model',
+        category: 'Advanced',
+        requiresRestart: false,
+        default: undefined as string | undefined,
+        description: 'The default model to use when not specified.',
+        showInDialog: true,
+      },
+    },
+  },
+
   general: {
     type: 'object',
     label: 'General',

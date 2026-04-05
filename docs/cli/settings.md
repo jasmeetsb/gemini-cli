@@ -22,6 +22,13 @@ they appear in the UI.
 
 <!-- SETTINGS-AUTOGEN:START -->
 
+### Ollama
+
+| UI Label      | Setting               | Description                                  | Default                    |
+| ------------- | --------------------- | -------------------------------------------- | -------------------------- |
+| Ollama Host   | `ollama.host`         | The host URL for the Ollama server.          | `"http://localhost:11434"` |
+| Default Model | `ollama.defaultModel` | The default model to use when not specified. | `undefined`                |
+
 ### General
 
 | UI Label                | Setting                            | Description                                                                                                                                                                                                                                                   | Default     |

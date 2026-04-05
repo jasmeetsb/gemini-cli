@@ -28,6 +28,7 @@ import { determineSurface } from '../utils/surface.js';
 import { RecordingContentGenerator } from './recordingContentGenerator.js';
 import { getVersion, resolveModel } from '../../index.js';
 import type { LlmRole } from '../telemetry/llmRole.js';
+import { OllamaContentGenerator } from './ollamaContentGenerator.js';
 
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
@@ -63,6 +64,7 @@ export enum AuthType {
   LEGACY_CLOUD_SHELL = 'cloud-shell',
   COMPUTE_ADC = 'compute-default-credentials',
   GATEWAY = 'gateway',
+  OLLAMA = 'ollama',
 }
 
 /**
@@ -89,6 +91,9 @@ export function getAuthTypeFromEnv(): AuthType | undefined {
   ) {
     return AuthType.COMPUTE_ADC;
   }
+  if (process.env['OLLAMA_HOST'] || process.env['OLLAMA_DEFAULT_MODEL']) {
+    return AuthType.OLLAMA;
+  }
   return undefined;
 }
 
@@ -99,6 +104,7 @@ export type ContentGeneratorConfig = {
   proxy?: string;
   baseUrl?: string;
   customHeaders?: Record<string, string>;
+  ollama?: { host?: string; defaultModel?: string };
 };
 
 export async function createContentGeneratorConfig(
@@ -125,6 +131,7 @@ export async function createContentGeneratorConfig(
     proxy: config?.getProxy(),
     baseUrl,
     customHeaders,
+    ollama: config?.ollama,
   };
 
   // If we are using Google auth or we are in Cloud Shell, there is nothing else to validate for now
@@ -290,6 +297,19 @@ export async function createContentGenerator(
       });
       return new LoggingContentGenerator(googleGenAI.models, gcConfig);
     }
+
+    if (config.authType === AuthType.OLLAMA) {
+      const requestedModel = gcConfig.getModel();
+      const model = requestedModel.startsWith('ollama/')
+        ? requestedModel.substring(7)
+        : requestedModel;
+      const host =
+        config.ollama?.host ||
+        process.env['OLLAMA_HOST'] ||
+        'http://localhost:11434';
+      return new OllamaContentGenerator(host, model);
+    }
+
     throw new Error(
       `Error creating contentGenerator: Unsupported authType: ${config.authType}`,
     );

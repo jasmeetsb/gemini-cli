@@ -42,6 +42,29 @@
         "type": "string"
       }
     },
+    "ollama": {
+      "title": "Ollama",
+      "description": "Configuration for Ollama local models.",
+      "markdownDescription": "Configuration for Ollama local models.\n\n- Category: `Advanced`\n- Requires restart: `yes`\n- Default: `{}`",
+      "default": {},
+      "type": "object",
+      "properties": {
+        "host": {
+          "title": "Ollama Host",
+          "description": "The host URL for the Ollama server.",
+          "markdownDescription": "The host URL for the Ollama server.\n\n- Category: `Advanced`\n- Requires restart: `yes`\n- Default: `http://localhost:11434`",
+          "default": "http://localhost:11434",
+          "type": "string"
+        },
+        "defaultModel": {
+          "title": "Default Model",
+          "description": "The default model to use when not specified.",
+          "markdownDescription": "The default model to use when not specified.\n\n- Category: `Advanced`\n- Requires restart: `no`",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "general": {
       "title": "General",
       "description": "General application settings.",

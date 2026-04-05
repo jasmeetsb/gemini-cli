@@ -223,6 +223,11 @@ export interface GemmaModelRouterSettings {
   };
 }
 
+export interface OllamaSettings {
+  host?: string;
+  defaultModel?: string;
+}
+
 export interface ADKSettings {
   agentSessionNoninteractiveEnabled?: boolean;
 }
@@ -549,6 +554,12 @@ export const ConfigSchema = z.object({
       }
     })
     .optional(),
+  ollama: z
+    .object({
+      host: z.string().default('http://localhost:11434'),
+      defaultModel: z.string().optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -668,6 +679,7 @@ export interface ConfigParameters {
   policyUpdateConfirmationRequest?: PolicyUpdateConfirmationRequest;
   output?: OutputSettings;
   gemmaModelRouter?: GemmaModelRouterSettings;
+  ollama?: OllamaSettings;
   adk?: ADKSettings;
   disableModelRouterForAuth?: AuthType[];
   continueOnFailedApiCall?: boolean;
@@ -758,6 +770,7 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly debugMode: boolean;
   private readonly question: string | undefined;
   private readonly worktreeSettings: WorktreeSettings | undefined;
+  readonly ollama: OllamaSettings | undefined;
   readonly enableConseca: boolean;
 
   private readonly coreTools: string[] | undefined;
@@ -990,6 +1003,7 @@ export class Config implements McpContext, AgentLoopContext {
     this.debugMode = params.debugMode;
     this.question = params.question;
     this.worktreeSettings = params.worktreeSettings;
+    this.ollama = params.ollama;
 
     this._sandboxPolicyManager = new SandboxPolicyManager();
     const initialApprovalMode =
