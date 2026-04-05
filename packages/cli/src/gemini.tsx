@@ -49,6 +49,7 @@ import {
   type DnsResolutionOrder,
   type LoadedSettings,
 } from './config/settings.js';
+import { ensureMigrated } from './utils/profileManager.js';
 import {
   loadTrustedFolders,
   type TrustedFoldersError,
@@ -208,6 +209,8 @@ export async function main() {
   const slashCommandConflictHandler = new SlashCommandConflictHandler();
   slashCommandConflictHandler.start();
   registerCleanup(() => slashCommandConflictHandler.stop());
+
+  ensureMigrated();
 
   const loadSettingsHandle = startupProfiler.start('load_settings');
   const settings = loadSettings();
