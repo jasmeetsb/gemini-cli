@@ -16,27 +16,27 @@ Tips for getting started:
 2. /help for more information
 3. Ask coding questions, edit code or run commands
 4. Be specific for the best results
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      └────────────────────────────┘
 Notifications
 
 Composer
@@ -69,33 +69,33 @@ exports[`App > Snapshots > renders with dialogs visible 1`] = `
  Gemini CLI v1.2.3
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                                                                      │ Prompts: 0                 │
+                                                                      │ Input Tokens: 0            │
+                                                                      │ Output Tokens: 0           │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      └────────────────────────────┘
 Notifications
 
 DialogManager
@@ -133,12 +133,12 @@ HistoryItemDisplay
 │   2. Allow for this session                                                                      │
 │   3. No, suggest changes (esc)                                                                   │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-
-
-
-
-
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      │                            │
+                                                                      └────────────────────────────┘
 Notifications
 
 Composer

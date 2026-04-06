@@ -34,6 +34,11 @@ exports[`<MarkdownDisplay /> > with 'Unix' line endings > handles unclosed (pend
 "
 `;
 
+exports[`<MarkdownDisplay /> > with 'Unix' line endings > handles unclosed (pending) code blocks 2`] = `
+" 1 let y = 2;
+"
+`;
+
 exports[`<MarkdownDisplay /> > with 'Unix' line endings > hides line numbers in code blocks when showLineNumbers is false 1`] = `
 " const x = 1;
 "

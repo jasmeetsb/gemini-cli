@@ -84,3 +84,13 @@ exports[`<TodoTray /> (showFullTodos: true) > renders when todos exist but none 
  ✓ Completed Task
 "
 `;
+
+exports[`<TodoTray /> (showFullTodos: true) > renders when todos exist but none are in progress 2`] = `
+"────────────────────────────────────────────────────────────────────────────────────────────────────
+ Todo  1/2 completed (Ctrl+T to toggle)
+
+ ☐ Pending Task
+ ✗ In Progress Task
+ ✓ Completed Task
+"
+`;

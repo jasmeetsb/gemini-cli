@@ -146,6 +146,23 @@ exports[`MainContent > renders a subagent with a complete box including bottom b
 "
 `;
 
+exports[`MainContent > renders a subagent with a complete box including bottom border 2`] = `
+"AppHeader(full)
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+ > Investigate                                                                  
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+╭──────────────────────────────────────────────────────────────────────────╮
+│ ≡ Running Agent... (ctrl+o to collapse)                                  │
+│                                                                          │
+│ Running subagent codebase_investigator...                                │
+│                                                                          │
+│ ⠋  run_shell_command echo hello                                          │
+│                                                                          │
+╰──────────────────────────────────────────────────────────────────────────╯
+"
+`;
+
 exports[`MainContent > renders mixed history items (user + gemini) with single line padding between them 1`] = `
 "ScrollableList
 AppHeader(full)
