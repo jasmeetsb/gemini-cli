@@ -1,0 +1,6 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AppContainer State Management > Snapshots > matches snapshot of initial state 1`] = `
+"AppContainer State SnapshotStreamingState: idleCurrentModel: gemini-9001-super-duper
+"
+`;

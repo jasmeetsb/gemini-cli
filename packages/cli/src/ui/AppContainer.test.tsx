@@ -17,6 +17,7 @@ import {
 import { render, cleanup, persistentStateMock } from '../test-utils/render.js';
 import { waitFor } from '../test-utils/async.js';
 import { act, useContext } from 'react';
+import { Box, Text } from 'ink';
 import { AppContainer } from './AppContainer.js';
 import { SettingsContext } from './contexts/SettingsContext.js';
 import { type TrackedToolCall } from './hooks/useToolScheduler.js';
@@ -127,10 +128,20 @@ vi.mock('ink', async (importOriginal) => {
 let capturedUIState: UIState;
 let capturedUIActions: UIActions;
 let capturedOverflowActions: OverflowActions;
+let renderForSnapshot = false;
 function TestContextConsumer() {
   capturedUIState = useContext(UIStateContext)!;
   capturedUIActions = useContext(UIActionsContext)!;
   capturedOverflowActions = useOverflowActions()!;
+  if (renderForSnapshot) {
+    return (
+      <Box>
+        <Text>AppContainer State Snapshot</Text>
+        <Text>StreamingState: {capturedUIState.streamingState}</Text>
+        <Text>CurrentModel: {capturedUIState.currentModel}</Text>
+      </Box>
+    );
+  }
   return null;
 }
 
@@ -340,6 +351,7 @@ describe('AppContainer State Management', () => {
   beforeEach(() => {
     persistentStateMock.reset();
     vi.clearAllMocks();
+    renderForSnapshot = false;
 
     mockIdeClient.getInstance.mockReturnValue(new Promise(() => {}));
 
@@ -3565,6 +3577,14 @@ describe('AppContainer State Management', () => {
       expect(capturedUIState).toBeTruthy();
       expect(capturedUIState.allowPlanMode).toBe(false);
       unmount();
+    });
+  });
+
+  describe('Snapshots', () => {
+    it('matches snapshot of initial state', async () => {
+      renderForSnapshot = true;
+      const { lastFrame } = await act(async () => renderAppContainer());
+      expect(lastFrame()).toMatchSnapshot();
     });
   });
 });
