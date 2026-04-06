@@ -5,6 +5,7 @@
  */
 
 import type React from 'react';
+import { useMemo } from 'react';
 import { Box } from 'ink';
 import { Notifications } from '../components/Notifications.js';
 import { MainContent } from '../components/MainContent.js';
@@ -18,6 +19,7 @@ import { CopyModeWarning } from '../components/CopyModeWarning.js';
 import { BackgroundTaskDisplay } from '../components/BackgroundTaskDisplay.js';
 import { StreamingState } from '../types.js';
 import { StatusPane } from '../components/StatusPane.js';
+import { computeSessionStats } from '../utils/computeStats.js';
 
 export const SplitPaneAppLayout: React.FC = () => {
   const uiState = useUIState();
@@ -29,6 +31,33 @@ export const SplitPaneAppLayout: React.FC = () => {
   // Allocate 70% width to chat and 30% to status pane
   const leftPaneWidth = Math.floor(uiState.terminalWidth * 0.7);
   const rightPaneWidth = uiState.terminalWidth - leftPaneWidth;
+
+  const sessionStats = uiState?.sessionStats || {
+    promptCount: 0,
+    metrics: {
+      models: {},
+      tools: {
+        totalDecisions: { accept: 0, reject: 0, modify: 0, auto_accept: 0 },
+      },
+      files: {},
+    },
+  };
+  const metrics = sessionStats.metrics;
+
+  /* eslint-disable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+  const computedStats = useMemo(
+    () => computeSessionStats(metrics as any),
+    [metrics],
+  );
+  const totalCandidateTokens = useMemo(
+    () =>
+      Object.values(metrics.models || {}).reduce(
+        (acc: number, model: any) => acc + (model.tokens?.candidates || 0),
+        0,
+      ),
+    [metrics.models],
+  );
+  /* eslint-enable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
 
   return (
     <Box
@@ -54,7 +83,15 @@ export const SplitPaneAppLayout: React.FC = () => {
           borderColor="gray"
           padding={1}
         >
-          <StatusPane />
+          <StatusPane
+            currentModel={uiState.currentModel}
+            branchName={uiState.branchName}
+            backgroundTaskCount={uiState.backgroundTaskCount}
+            quotaStats={uiState.quota.stats}
+            promptCount={sessionStats.promptCount}
+            totalInputTokens={computedStats.totalInputTokens}
+            totalOutputTokens={totalCandidateTokens}
+          />
         </Box>
       </Box>
 
