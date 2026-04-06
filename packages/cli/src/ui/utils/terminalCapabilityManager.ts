@@ -101,59 +101,72 @@ export class TerminalCapabilityManager {
   private detectNameFromEnv(): { name: string; version?: string } | undefined {
     const env = process.env;
 
-    if (env['TERM_PROGRAM']) {
-      return {
-        name: env['TERM_PROGRAM'],
-        version: env['TERM_PROGRAM_VERSION'],
-      };
-    }
+    const rules: Array<{
+      check: () => string | undefined | false | boolean;
+      result: (val: string) => { name: string; version?: string };
+    }> = [
+      {
+        check: () => env['TERM_PROGRAM'],
+        result: (v: string) => ({
+          name: v,
+          version: env['TERM_PROGRAM_VERSION'],
+        }),
+      },
+      {
+        check: () => env['WEZTERM_VERSION'],
+        result: (v: string) => ({ name: 'WezTerm', version: v }),
+      },
+      {
+        check: () =>
+          (env['ITERM_SESSION_ID'] ||
+            env['ITERM_PROFILE'] ||
+            env['ITERM_PROFILE_NAME']) &&
+          'iTerm2',
+        result: (v: string) => ({ name: v }),
+      },
+      {
+        check: () => env['TERM_SESSION_ID'] && 'Apple_Terminal',
+        result: (v: string) => ({ name: v }),
+      },
+      {
+        check: () =>
+          (env['KITTY_WINDOW_ID'] || env['TERM']?.includes('kitty')) && 'kitty',
+        result: (v: string) => ({ name: v }),
+      },
+      {
+        check: () =>
+          (env['ALACRITTY_SOCKET'] || env['TERM'] === 'alacritty') &&
+          'Alacritty',
+        result: (v: string) => ({ name: v }),
+      },
+      {
+        check: () => env['KONSOLE_VERSION'],
+        result: (v: string) => ({ name: 'Konsole', version: v }),
+      },
+      {
+        check: () => env['GNOME_TERMINAL_SCREEN'] && 'gnome-terminal',
+        result: (v: string) => ({ name: v }),
+      },
+      {
+        check: () => env['VTE_VERSION'],
+        result: (v: string) => ({ name: 'VTE', version: v }),
+      },
+      {
+        check: () => env['WT_SESSION'] && 'WindowsTerminal',
+        result: (v: string) => ({ name: v }),
+      },
+      {
+        check: () => env['TERM'] === 'dumb' && 'dumb',
+        result: (v: string) => ({ name: v }),
+      },
+      { check: () => env['TERM'], result: (v: string) => ({ name: v }) },
+    ];
 
-    if (env['WEZTERM_VERSION']) {
-      return { name: 'WezTerm', version: env['WEZTERM_VERSION'] };
-    }
-
-    if (
-      env['ITERM_SESSION_ID'] ||
-      env['ITERM_PROFILE'] ||
-      env['ITERM_PROFILE_NAME']
-    ) {
-      return { name: 'iTerm2' };
-    }
-
-    if (env['TERM_SESSION_ID']) {
-      return { name: 'Apple_Terminal' };
-    }
-
-    if (env['KITTY_WINDOW_ID'] || env['TERM']?.includes('kitty')) {
-      return { name: 'kitty' };
-    }
-
-    if (env['ALACRITTY_SOCKET'] || env['TERM'] === 'alacritty') {
-      return { name: 'Alacritty' };
-    }
-
-    if (env['KONSOLE_VERSION']) {
-      return { name: 'Konsole', version: env['KONSOLE_VERSION'] };
-    }
-
-    if (env['GNOME_TERMINAL_SCREEN']) {
-      return { name: 'gnome-terminal' };
-    }
-
-    if (env['VTE_VERSION']) {
-      return { name: 'VTE', version: env['VTE_VERSION'] };
-    }
-
-    if (env['WT_SESSION']) {
-      return { name: 'WindowsTerminal' };
-    }
-
-    if (env['TERM'] === 'dumb') {
-      return { name: 'dumb' };
-    }
-
-    if (env['TERM']) {
-      return { name: env['TERM'] };
+    for (const rule of rules) {
+      const val = rule.check();
+      if (typeof val === 'string') {
+        return rule.result(val);
+      }
     }
 
     return undefined;
