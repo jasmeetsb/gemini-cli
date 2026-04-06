@@ -83,6 +83,7 @@ export class TerminalCapabilityManager {
   private kittyEnabled = false;
   private modifyOtherKeysSupported = false;
   private terminalName: string | undefined;
+  private terminalVersion: string | undefined;
 
   private constructor() {}
 
@@ -95,6 +96,67 @@ export class TerminalCapabilityManager {
 
   static resetInstanceForTesting(): void {
     this.instance = undefined;
+  }
+
+  private detectNameFromEnv(): { name: string; version?: string } | undefined {
+    const env = process.env;
+
+    if (env['TERM_PROGRAM']) {
+      return {
+        name: env['TERM_PROGRAM'],
+        version: env['TERM_PROGRAM_VERSION'],
+      };
+    }
+
+    if (env['WEZTERM_VERSION']) {
+      return { name: 'WezTerm', version: env['WEZTERM_VERSION'] };
+    }
+
+    if (
+      env['ITERM_SESSION_ID'] ||
+      env['ITERM_PROFILE'] ||
+      env['ITERM_PROFILE_NAME']
+    ) {
+      return { name: 'iTerm2' };
+    }
+
+    if (env['TERM_SESSION_ID']) {
+      return { name: 'Apple_Terminal' };
+    }
+
+    if (env['KITTY_WINDOW_ID'] || env['TERM']?.includes('kitty')) {
+      return { name: 'kitty' };
+    }
+
+    if (env['ALACRITTY_SOCKET'] || env['TERM'] === 'alacritty') {
+      return { name: 'Alacritty' };
+    }
+
+    if (env['KONSOLE_VERSION']) {
+      return { name: 'Konsole', version: env['KONSOLE_VERSION'] };
+    }
+
+    if (env['GNOME_TERMINAL_SCREEN']) {
+      return { name: 'gnome-terminal' };
+    }
+
+    if (env['VTE_VERSION']) {
+      return { name: 'VTE', version: env['VTE_VERSION'] };
+    }
+
+    if (env['WT_SESSION']) {
+      return { name: 'WindowsTerminal' };
+    }
+
+    if (env['TERM'] === 'dumb') {
+      return { name: 'dumb' };
+    }
+
+    if (env['TERM']) {
+      return { name: env['TERM'] };
+    }
+
+    return undefined;
   }
 
   /**
@@ -117,7 +179,7 @@ export class TerminalCapabilityManager {
     process.on('SIGTERM', cleanupTerminalOnExit);
     process.on('SIGINT', cleanupTerminalOnExit);
 
-    return new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const originalRawMode = process.stdin.isRaw;
       if (!originalRawMode) {
         process.stdin.setRawMode(true);
@@ -140,7 +202,6 @@ export class TerminalCapabilityManager {
         if (!originalRawMode) {
           process.stdin.setRawMode(false);
         }
-        this.detectionComplete = true;
         resolve();
       };
 
@@ -241,6 +302,19 @@ export class TerminalCapabilityManager {
         cleanup();
       }
     });
+
+    if (!this.terminalName) {
+      const envInfo = this.detectNameFromEnv();
+      if (envInfo) {
+        this.terminalName = envInfo.name;
+        this.terminalVersion = envInfo.version;
+        debugLogger.log(
+          `Detected terminal name from env: ${this.terminalName} (version: ${this.terminalVersion})`,
+        );
+      }
+    }
+
+    this.detectionComplete = true;
   }
 
   enableSupportedModes() {

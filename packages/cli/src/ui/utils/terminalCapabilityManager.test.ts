@@ -163,6 +163,22 @@ describe('TerminalCapabilityManager', () => {
     expect(manager.isKittyProtocolEnabled()).toBe(true);
   });
 
+  it('should fallback to environment variables if no terminal name is detected via query', async () => {
+    const manager = TerminalCapabilityManager.getInstance();
+
+    const originalTermProgram = process.env['TERM_PROGRAM'];
+    process.env['TERM_PROGRAM'] = 'test-terminal';
+
+    const promise = manager.detectCapabilities();
+
+    stdin.emit('data', Buffer.from('\x1b[?62c'));
+
+    await promise;
+    expect(manager.getTerminalName()).toBe('test-terminal');
+
+    process.env['TERM_PROGRAM'] = originalTermProgram;
+  });
+
   it('should not detect Kitty if only DA1 (c) is received', async () => {
     const manager = TerminalCapabilityManager.getInstance();
     const promise = manager.detectCapabilities();
