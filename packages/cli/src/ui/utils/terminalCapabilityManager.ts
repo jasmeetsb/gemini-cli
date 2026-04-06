@@ -220,7 +220,7 @@ export class TerminalCapabilityManager {
 
       // A somewhat long timeout is acceptable as all terminals should respond
       // to the device attributes query used as a sentinel.
-      timeoutId = setTimeout(cleanup, 1000);
+      timeoutId = setTimeout(cleanup, 200);
 
       const onData = (data: Buffer) => {
         buffer += data.toString();
