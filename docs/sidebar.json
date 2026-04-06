@@ -136,6 +136,7 @@
             "slug": "docs/cli/notifications"
           },
           { "label": "Plan mode", "slug": "docs/cli/plan-mode" },
+          { "label": "Profile management", "slug": "docs/cli/profiles" },
           {
             "label": "Subagents",
             "slug": "docs/core/subagents"

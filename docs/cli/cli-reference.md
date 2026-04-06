@@ -130,3 +130,14 @@ See [MCP Server Integration](../tools/mcp-server.md) for more details.
 | `gemini skills disable --all`    | Disable all skills                    | `gemini skills disable --all`                     |
 
 See [Agent Skills Documentation](./skills.md) for more details.
+
+## Profile management
+
+| Command                        | Description                  | Example                          |
+| ------------------------------ | ---------------------------- | -------------------------------- |
+| `gemini profile list`          | List all available profiles  | `gemini profile list`            |
+| `gemini profile create <name>` | Create a new profile         | `gemini profile create work`     |
+| `gemini profile use <name>`    | Switch to a specific profile | `gemini profile use work`        |
+| `gemini profile delete <name>` | Delete a profile             | `gemini profile delete personal` |
+
+See [Profile Management](./profiles.md) for more details.
