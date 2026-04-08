@@ -13,6 +13,15 @@ import {
   vi,
   type Mocked,
 } from 'vitest';
+
+vi.mock('./jit-context.js', () => ({
+  discoverJitContext: vi.fn().mockResolvedValue(''),
+  appendJitContext: vi.fn().mockImplementation((content, context) => {
+    if (!context) return content;
+    return `${content}\n\n--- Newly Discovered Project Context ---\n${context}\n--- End Project Context ---`;
+  }),
+}));
+
 import {
   getCorrectedFileContent,
   WriteFileTool,
@@ -39,6 +48,7 @@ import { ensureCorrectFileContent } from '../utils/editCorrector.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
 import { IdeClient, type DiffUpdateResult } from '../ide/ide-client.js';
 import { WorkspaceContext } from '../utils/workspaceContext.js';
+import { validateContent } from '../utils/syntaxValidator.js';
 import {
   createMockMessageBus,
   getMockMessageBusInstance,
@@ -50,6 +60,9 @@ const plansDir = path.resolve(os.tmpdir(), 'gemini-cli-test-plans');
 // --- MOCKS ---
 vi.mock('../core/client.js');
 vi.mock('../utils/editCorrector.js');
+vi.mock('../utils/syntaxValidator.js', () => ({
+  validateContent: vi.fn().mockResolvedValue({ valid: true }),
+}));
 vi.mock('../ide/ide-client.js', () => ({
   IdeClient: {
     getInstance: vi.fn(),
@@ -116,13 +129,7 @@ vi.mock('../telemetry/loggers.js', () => ({
   logFileOperation: vi.fn(),
 }));
 
-vi.mock('./jit-context.js', () => ({
-  discoverJitContext: vi.fn().mockResolvedValue(''),
-  appendJitContext: vi.fn().mockImplementation((content, context) => {
-    if (!context) return content;
-    return `${content}\n\n--- Newly Discovered Project Context ---\n${context}\n--- End Project Context ---`;
-  }),
-}));
+
 
 // --- END MOCKS ---
 
@@ -1015,6 +1022,42 @@ describe('WriteFileTool', () => {
         }
       },
     );
+  });
+
+  describe('syntax validation', () => {
+    const abortSignal = new AbortController().signal;
+
+    it('should proceed when syntax validation succeeds', async () => {
+      vi.mocked(validateContent).mockResolvedValue({ valid: true });
+      
+      const filePath = path.join(rootDir, 'test.py');
+      const content = 'def foo(): pass';
+      mockEnsureCorrectFileContent.mockResolvedValue(content);
+
+      const params = { file_path: filePath, content };
+      const invocation = tool.build(params);
+      const result = await invocation.execute(abortSignal);
+
+      expect(validateContent).toHaveBeenCalledWith(filePath, content);
+      expect(result.llmContent).toContain('Successfully created and wrote to new file');
+    });
+
+    it('should return error when syntax validation fails', async () => {
+      vi.mocked(validateContent).mockResolvedValue({ valid: false, error: 'SyntaxError: invalid syntax' });
+      
+      const filePath = path.join(rootDir, 'test.py');
+      const content = 'def foo():';
+      mockEnsureCorrectFileContent.mockResolvedValue(content);
+
+      const params = { file_path: filePath, content };
+      const invocation = tool.build(params);
+      const result = await invocation.execute(abortSignal);
+
+      expect(validateContent).toHaveBeenCalledWith(filePath, content);
+      expect(result.error?.type).toBe(ToolErrorType.FILE_WRITE_FAILURE);
+      expect(result.llmContent).toContain('Syntax validation failed');
+      expect(result.llmContent).toContain('SyntaxError: invalid syntax');
+    });
   });
 
   describe('disableLLMCorrection', () => {

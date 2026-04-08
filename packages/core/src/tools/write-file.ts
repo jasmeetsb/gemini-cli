@@ -50,6 +50,7 @@ import { resolveToolDeclaration } from './definitions/resolver.js';
 import { detectOmissionPlaceholders } from './omissionPlaceholderDetector.js';
 import { isGemini3Model } from '../config/models.js';
 import { discoverJitContext, appendJitContext } from './jit-context.js';
+import { validateContent } from '../utils/syntaxValidator.js';
 
 /**
  * Parameters for the WriteFile tool
@@ -302,6 +303,21 @@ class WriteFileToolInvocation extends BaseToolInvocation<
       correctedContent: fileContent,
       fileExists,
     } = correctedContentResult;
+
+    // Validate content before writing
+    const validationResult = await validateContent(this.resolvedPath, fileContent);
+    if (!validationResult.valid) {
+      const errorMsg = `Syntax validation failed for '${this.resolvedPath}':\n${validationResult.error}`;
+      return {
+        llmContent: errorMsg,
+        returnDisplay: errorMsg,
+        error: {
+          message: errorMsg,
+          type: ToolErrorType.FILE_WRITE_FAILURE,
+        },
+      };
+    }
+
     // fileExists is true if the file existed (and was readable or unreadable but caught by readError).
     // fileExists is false if the file did not exist (ENOENT).
     const isNewFile =

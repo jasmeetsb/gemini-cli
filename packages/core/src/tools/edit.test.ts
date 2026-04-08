@@ -10,6 +10,8 @@ const mockFixLLMEditWithInstruction = vi.hoisted(() => vi.fn());
 const mockGenerateJson = vi.hoisted(() => vi.fn());
 const mockOpenDiff = vi.hoisted(() => vi.fn());
 
+
+
 import { IdeClient } from '../ide/ide-client.js';
 
 vi.mock('../ide/ide-client.js', () => ({
@@ -72,6 +74,7 @@ import { type Content, type Part, type SchemaUnion } from '@google/genai';
 import { createMockWorkspaceContext } from '../test-utils/mockWorkspaceContext.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
 import type { BaseLlmClient } from '../core/baseLlmClient.js';
+import * as syntaxValidator from '../utils/syntaxValidator.js';
 
 describe('EditTool', () => {
   let tool: EditTool;
@@ -84,6 +87,7 @@ describe('EditTool', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.spyOn(syntaxValidator, 'validateContent').mockResolvedValue({ valid: true });
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'edit-tool-test-'));
     rootDir = path.join(tempDir, 'root');
     fs.mkdirSync(rootDir);
@@ -1196,6 +1200,50 @@ function doIt() {
         0,
       );
       expect(totalActualRemoved).toBe(totalExpectedRemoved);
+    });
+  });
+
+  describe('syntax validation', () => {
+    const abortSignal = new AbortController().signal;
+
+    it('should proceed when syntax validation succeeds', async () => {
+      vi.spyOn(syntaxValidator, 'validateContent').mockResolvedValue({ valid: true });
+      
+      const filePath = path.join(rootDir, 'test.py');
+      fs.writeFileSync(filePath, 'def foo(): pass', 'utf8');
+      
+      const params: EditToolParams = {
+        file_path: filePath,
+        instruction: 'Replace pass with return',
+        old_string: 'pass',
+        new_string: 'return',
+      };
+      const invocation = tool.build(params);
+      const result = await invocation.execute(abortSignal);
+
+      expect(syntaxValidator.validateContent).toHaveBeenCalledWith(filePath, 'def foo(): return');
+      expect(result.llmContent).toMatch(/Successfully modified file/);
+    });
+
+    it('should return error when syntax validation fails', async () => {
+      vi.spyOn(syntaxValidator, 'validateContent').mockResolvedValue({ valid: false, error: 'SyntaxError: invalid syntax' });
+      
+      const filePath = path.join(rootDir, 'test.py');
+      fs.writeFileSync(filePath, 'def foo(): pass', 'utf8');
+      
+      const params: EditToolParams = {
+        file_path: filePath,
+        instruction: 'Replace pass with invalid syntax',
+        old_string: 'pass',
+        new_string: 'def:',
+      };
+      const invocation = tool.build(params);
+      const result = await invocation.execute(abortSignal);
+
+      expect(syntaxValidator.validateContent).toHaveBeenCalledWith(filePath, 'def foo(): def:');
+      expect(result.error?.type).toBe(ToolErrorType.FILE_WRITE_FAILURE);
+      expect(result.llmContent).toContain('Syntax validation failed');
+      expect(result.llmContent).toContain('SyntaxError: invalid syntax');
     });
   });
 

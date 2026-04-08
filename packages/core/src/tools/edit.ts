@@ -57,6 +57,7 @@ import { EDIT_DEFINITION } from './definitions/coreTools.js';
 import { resolveToolDeclaration } from './definitions/resolver.js';
 import { detectOmissionPlaceholders } from './omissionPlaceholderDetector.js';
 import { discoverJitContext, appendJitContext } from './jit-context.js';
+import { validateContent } from '../utils/syntaxValidator.js';
 
 const ENABLE_FUZZY_MATCH_RECOVERY = true;
 const FUZZY_MATCH_THRESHOLD = 0.1; // Allow up to 10% weighted difference
@@ -886,6 +887,21 @@ class EditToolInvocation
       if (useCRLF) {
         finalContent = finalContent.replace(/\r?\n/g, '\r\n');
       }
+
+      // Validate content before writing
+      const validationResult = await validateContent(this.resolvedPath, finalContent);
+      if (!validationResult.valid) {
+        const errorMsg = `Syntax validation failed for '${this.resolvedPath}':\n${validationResult.error}`;
+        return {
+          llmContent: errorMsg,
+          returnDisplay: errorMsg,
+          error: {
+            message: errorMsg,
+            type: ToolErrorType.FILE_WRITE_FAILURE,
+          },
+        };
+      }
+
       await this.config
         .getFileSystemService()
         .writeTextFile(this.resolvedPath, finalContent);

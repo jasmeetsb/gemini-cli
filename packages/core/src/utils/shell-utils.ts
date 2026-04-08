@@ -835,7 +835,7 @@ export function stripShellWrapper(command: string): string {
 export const spawnAsync = async (
   command: string,
   args: string[],
-  options?: SpawnOptionsWithoutStdio & { sandboxManager?: SandboxManager },
+  options?: SpawnOptionsWithoutStdio & { sandboxManager?: SandboxManager; stdin?: string },
 ): Promise<{ stdout: string; stderr: string }> => {
   const sandboxManager = options?.sandboxManager ?? new NoopSandboxManager();
   const prepared = await sandboxManager.prepareCommand({
@@ -852,6 +852,12 @@ export const spawnAsync = async (
       ...options,
       env: finalEnv,
     });
+
+    if (options?.stdin) {
+      child.stdin.write(options.stdin);
+      child.stdin.end();
+    }
+
     let stdout = '';
     let stderr = '';
 
