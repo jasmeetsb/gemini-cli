@@ -14,6 +14,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   resolve: {
     conditions: ['test'],
+    alias: {
+      react: path.resolve(__dirname, '../../node_modules/react'),
+      '@google/gemini-cli-core': path.resolve(
+        __dirname,
+        '../core/dist/index.js',
+      ),
+    },
   },
   test: {
     include: ['**/*.{test,spec}.{js,ts,jsx,tsx}', 'config.test.ts'],
@@ -25,9 +32,7 @@ export default defineConfig({
     outputFile: {
       junit: 'junit.xml',
     },
-    alias: {
-      react: path.resolve(__dirname, '../../node_modules/react'),
-    },
+
     setupFiles: ['./test-setup.ts'],
     testTimeout: 60000,
     hookTimeout: 60000,
